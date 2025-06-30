@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event List</title>
+</head>
+<body>
+    <h1>Available Events</h1>
+    <h2>Filter by Category:</h2>
+    <a href="/">All</a>
+    <a href="/?category=Concert">Concerts</a>
+    <a href="/?category=Picnic">Picnic</a>
+    <a href="/?category=Party">Party</a>
+    <a href="/?category=Workshop">Workshop</a>
+    <a href="/?category=Exhibition">Exhibition</a>
+    <a href="/?category=Other">Other</a>
+    <ul>
+        {% for event in events %}
+            <li>
+
+<strong>{{ event.title}}</strong> - {{ event.date}} at {{event.venue}}
+<br>
+                {{event.description}}
+<br>
+                Price: {{event.price}}
+| Tickets Left:
+{{ event.available_tickets}}
+<br>
+                <form method="post" action="{% url 'add_to_cart' event.id %}"> {% csrf_token %}
+                <button type="submit">Book Now</button>
+                </form>
+            </li>
+
+        {% endfor %}
+    </ul>
+<p><a href="{% url 'view_cart' %}">View Cart</a></p>
+</body>
+</html>

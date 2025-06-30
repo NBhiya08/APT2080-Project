@@ -1,0 +1,96 @@
+{% load cart_extras %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkout</title>
+</head>
+<body>
+    <h1>Checkout</h1>
+
+    {% if events %}
+        <ul>
+          {% for event in events %}
+              <li>
+
+<strong>{{ event.title}}</strong><br>
+                Quantity: {{cart|get_item:event.id}}<br>
+                Price per ticket: {{event.price}}<br>
+              </li>
+          {% endfor %}
+        </ul>
+            <br>
+        <p><strong>Total Amount: ksh {{ total}}</strong></p>
+
+        <!--<form method="post" action="{% url 'confirm_booking' %}">
+          {% csrf_token %}
+          <button type="submit">Confirm Booking</button>
+        </form>-->
+
+<h3>Total:{{total}}</h3>
+    <form method="post" action="{% url 'confirm_booking' %}" onsubmit="return validatePaymentForm()">
+        {% csrf_token %}
+        <label for="payment_method">Select Payment Method: </label>
+        <select name="payment_method" id="payment_method" required>
+            <option value="">--Select--</option>
+            <option value="Mpesa">Mpesa</option>
+            <option value="Card">Visa/ Mastercard</option>
+        </select><br><br>
+
+       <div id="mpesa-details" style="display:none;">
+           <label for="mpesa_number">Mpesa Number: </label>
+           <input type="text" name="mpesa_number" id="mpesa_number"><br><br>
+       </div>
+       <div id="card-details" style="display:none;">
+           <label for="card_number">Mpesa Number: </label>
+           <input type="text" name="card_number" id="card_number"><br><br>
+       </div>
+
+        <button type="submit">Confirm Booking</button>
+    </form>
+
+<script>
+    function togglePaymentDetails() {
+        var paymentMethod =
+            document.getElementById("payment_method").value;
+            document.getElementById("mpesa-details").style.display = "none";
+        if (paymentMethod === "Mpesa") {
+            document.getElementById("mpesa-details").style.display = "block";
+    }   else if (paymentMethod == "Card") {
+            document.getElementById("card-details").style.display = "block";
+    }
+    }
+    function validatePaymentForm() {
+        var mpesaNumber =
+            document.getElementById("payment_method").value;
+        if (!paymentMethod) {
+            alert("Please select a payment method.");
+            return false;
+    }
+        if (paymentMethod === "Mpesa") {
+            var mpesaNumber =
+                document,getElementById("mpesa_number").value;
+            if (!mpesaNumber) {
+                alert("Please Enter Your Mpesa Number.");
+                return false;
+                }
+            }
+        if (paymentMethod === "Card") {
+            var cardNumber =
+                document.getElementById("card_number").value;
+            if (!cardNumber) {
+                alert("Please Enter Your Card Number.");
+                return false;
+                }
+            }
+    return true;
+}
+</script>
+
+    {% else %}
+        <p>Your cart is empty</p>
+        <a href="/">Browse Events</a>
+    {% endif %}
+
+</body>
+</html>
