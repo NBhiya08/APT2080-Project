@@ -1,0 +1,302 @@
+
+{% load cart_extras %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EventEase - My Cart</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding-bottom: 120px;
+      font-family: 'Segoe UI', sans-serif;
+      color: #333;
+      background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #a18cd1, #fbc2eb);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite, parallaxBG 60s linear infinite;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes parallaxBG {
+      0% { background-position-y: 0; }
+      100% { background-position-y: -500px; }
+    }
+
+    body.dark-mode {
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460, #1a1a2e);
+      color: white;
+    }
+
+    .logo-curve {
+      width: 220px;
+      height: 80px;
+    }
+
+    .logo-curve text {
+      fill: #000;
+      font-size: 12px;
+      font-style: italic;
+    }
+
+    .logo-text {
+      font-size: 28px;
+      font-weight: bold;
+      color: black;
+    }
+
+    body.dark-mode .logo-text,
+    body.dark-mode .logo-curve text {
+      color: white;
+      fill: white;
+    }
+
+    .dark-toggle {
+      position: fixed;
+      top: 20px;
+      left: 25px;
+      z-index: 1000;
+    }
+
+    .welcome-text {
+      text-align: center;
+      font-size: 2.2rem;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      font-weight: bold;
+      margin-top: 40px;
+      background: linear-gradient(90deg, #ff8a00, #e52e71, #9b00ff, #00c3ff);
+      background-size: 400% 400%;
+      animation: gradientText 6s ease infinite, fadeIn 2s ease-in-out;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+      transition: transform 0.3s ease;
+    }
+
+    .welcome-text:hover {
+      transform: scale(1.05);
+      text-shadow: 0 0 18px rgba(255, 255, 255, 0.6);
+    }
+
+    @keyframes gradientText {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(-10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .cart-container {
+      max-width: 900px;
+      margin: 50px auto;
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    body.dark-mode .cart-container {
+      background: #2c2c54;
+      color: white;
+    }
+
+    .event-img {
+      width: 120px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .quantity-controls button {
+      min-width: 36px;
+      font-weight: bold;
+      padding: 0 8px;
+    }
+
+    .btn-remove {
+      color: #dc3545;
+      border-color: transparent;
+    }
+
+    .btn-remove:hover {
+      color: white;
+      background-color: #dc3545;
+    }
+
+    .empty-cart {
+      text-align: center;
+      padding: 80px 0;
+      color: #6c757d;
+    }
+
+    .floating-cart {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 1050;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+      100% { transform: translateY(0px); }
+    }
+
+    .footer {
+      background: #222;
+      color: #f1f1f1;
+      text-align: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    .footer a {
+      color: #f1f1f1;
+      margin: 0 10px;
+      font-size: 20px;
+    }
+
+    .footer a:hover {
+      color: #0d6efd;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Dark Mode Toggle -->
+<button class="btn btn-outline-dark dark-toggle" onclick="toggleDarkMode()">🌓</button>
+
+<!-- Logo and Catchphrase -->
+<div class="d-flex justify-content-end pe-3 me-5 mt-3">
+  <div class="text-end">
+    <svg class="logo-curve mb-1">
+      <defs>
+        <path id="curve" d="M 10,70 A 160,70 0 0,1 290,70" />
+      </defs>
+      <text>
+        <textPath xlink:href="#curve" startOffset="50%" text-anchor="middle">
+          Unforgettable Events
+        </textPath>
+      </text>
+    </svg>
+    <div class="logo-text">EventEase</div>
+  </div>
+</div>
+
+<!-- Welcome Text -->
+<div class="welcome-text">
+  🛒 Your <span style="font-style: italic;">EventEase</span> Cart – Secure Your Spot 🎟️
+</div>
+
+<!-- Cart Container -->
+<div class="container cart-container">
+  <h1 class="mb-4 text-primary text-center">🛍️ My Cart</h1>
+
+  {% if events %}
+    <div class="list-group mb-4">
+      {% for event in events %}
+        <div class="list-group-item d-flex align-items-center gap-3">
+          <img src="{% static 'images/default_event.jpg' %}" alt="{{ event.title }}" class="event-img" />
+          <div class="flex-grow-1">
+            <h5 class="mb-1">{{ event.title }}</h5>
+            <p class="mb-1 text-muted">{{ event.date }} • {{ event.venue }}</p>
+            <p class="mb-0 fw-bold">Ksh {{ event.price }}</p>
+          </div>
+          <div class="quantity-controls d-flex align-items-center gap-2">
+            <form action="{% url 'update_quantity' event.id 'subtract' %}" method="post">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-secondary btn-sm">−</button>
+            </form>
+            <span class="px-3 fw-semibold">{{ cart|get_item:event.id }}</span>
+            <form action="{% url 'update_quantity' event.id 'add' %}" method="post">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-secondary btn-sm">+</button>
+            </form>
+          </div>
+          <form action="{% url 'remove_from_cart' event.id %}" method="post" class="ms-3">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-remove btn-sm">✕</button>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="d-flex justify-content-between">
+      <a href="/" class="btn btn-outline-primary">← Continue Booking</a>
+      <a href="{% url 'checkout' %}" class="btn btn-primary">Proceed to Checkout →</a>
+    </div>
+
+  {% else %}
+    <div class="empty-cart">
+      <h4>Your cart is empty 😞</h4>
+      <p><a href="/" class="btn btn-primary mt-3">Browse Events</a></p>
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+<!--{% load cart_extras %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Cart</title>
+</head>
+<body>
+    <h1>My Cart</h1>
+    {% if events %}
+        <ul>
+            {% for event in events %}
+                <li>
+
+<strong>{{ event.title}}</strong> - {{ event.date}} at {{evnt.venue}}
+<br>
+            Price:
+                   {{event.price}} <br>
+            Quantity:
+                   {{ cart|get_item:event.id}}
+
+            <form action="{% url 'update_quantity' event.id 'add' %}"
+                  method="post" style="display:inline;">
+                    {% csrf_token %}
+                <button type="submit">+</button>
+            </form>
+
+             <form action="{% url 'update_quantity' event.id 'subtract' %}"
+                  method="post" style="display:inline;">
+                    {% csrf_token %}
+                <button type="submit">-</button>
+            </form>
+
+            <form action="{% url 'remove_from_cart' event.id %}"
+                  method="post" style="display:inline;">
+                     {% csrf_token %}
+                <button type="submit">Remove</button>
+            </form>
+                </li>
+            {% endfor %}
+        </ul>
+        <a href="{% url 'checkout' %}"> Proceed to Checkout</a>
+        <br>
+        <a href="/">Continue Booking</a>
+    {% else %}
+        <p>Your cart is empty</p>
+        <a href="/">Browse Events</a>
+    {%endif %}
+</body>
+</html>-->

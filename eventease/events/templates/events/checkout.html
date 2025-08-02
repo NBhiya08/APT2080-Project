@@ -1,0 +1,382 @@
+{% load cart_extras %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>EventEase - Checkout</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding-bottom: 120px;
+      font-family: 'Segoe UI', sans-serif;
+      color: #333;
+      background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #a18cd1, #fbc2eb);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite, parallaxBG 60s linear infinite;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes parallaxBG {
+      0% { background-position-y: 0; }
+      100% { background-position-y: -500px; }
+    }
+
+    body.dark-mode {
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460, #1a1a2e);
+      color: white;
+    }
+
+    .dark-toggle {
+      position: fixed;
+      top: 20px;
+      left: 25px;
+      z-index: 1000;
+    }
+
+    .logo-curve {
+      width: 220px;
+      height: 80px;
+    }
+
+    .logo-curve text {
+      fill: #000;
+      font-size: 12px;
+      font-style: italic;
+    }
+
+    .logo-text {
+      font-size: 28px;
+      font-weight: bold;
+      color: black;
+    }
+
+    body.dark-mode .logo-text,
+    body.dark-mode .logo-curve text {
+      color: white;
+      fill: white;
+    }
+
+    .welcome-text {
+      text-align: center;
+      font-size: 2.2rem;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      font-weight: bold;
+      margin-top: 40px;
+      background: linear-gradient(90deg, #ff8a00, #e52e71, #9b00ff, #00c3ff);
+      background-size: 400% 400%;
+      animation: gradientText 6s ease infinite, fadeIn 2s ease-in-out;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+      transition: transform 0.3s ease;
+    }
+
+    .welcome-text:hover {
+      transform: scale(1.05);
+      text-shadow: 0 0 18px rgba(255, 255, 255, 0.6);
+    }
+
+    @keyframes gradientText {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(-10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .checkout-container {
+      max-width: 800px;
+      margin: 50px auto;
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    body.dark-mode .checkout-container {
+      background-color: #2c2c54;
+      color: white;
+    }
+
+    .event-summary {
+      border-bottom: 1px solid #ddd;
+      padding: 15px 0;
+    }
+
+    .event-summary:last-child {
+      border-bottom: none;
+    }
+
+    .form-section {
+      margin-top: 30px;
+    }
+
+    .footer {
+      background: #222;
+      color: #f1f1f1;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .footer a {
+      color: #f1f1f1;
+      margin: 0 10px;
+      font-size: 20px;
+    }
+
+    .footer a:hover {
+      color: #0d6efd;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Dark Mode Toggle -->
+<button class="btn btn-outline-dark dark-toggle" onclick="toggleDarkMode()">🌓</button>
+
+<!-- Logo & Catchphrase -->
+<div class="d-flex justify-content-end pe-3 me-5 mt-3">
+  <div class="text-end">
+    <svg class="logo-curve mb-1">
+      <defs>
+        <path id="curve" d="M 10,70 A 160,70 0 0,1 290,70" />
+      </defs>
+      <text>
+        <textPath xlink:href="#curve" startOffset="50%" text-anchor="middle">
+          Unforgettable Events
+        </textPath>
+      </text>
+    </svg>
+    <div class="logo-text">EventEase</div>
+  </div>
+</div>
+
+<!-- Welcome Text -->
+<div class="welcome-text">
+  🧾 Checkout – Complete Your Booking on <span style="font-style: italic;">EventEase</span>
+</div>
+
+<!-- Checkout Content -->
+<div class="container checkout-container">
+  <h2 class="mb-4 text-center text-primary">Secure Your Tickets</h2>
+
+  {% if events %}
+    {% for event in events %}
+      <div class="event-summary">
+        <h5>{{ event.title }}</h5>
+        <p class="mb-1">Quantity: {{ cart|get_item:event.id }}</p>
+        <p class="mb-1">Price per ticket: Ksh {{ event.price }}</p>
+      </div>
+    {% endfor %}
+
+    <div class="mt-3">
+      <h4>Total: <span class="text-success">Ksh {{ total }}</span></h4>
+    </div>
+
+    <form method="post" action="{% url 'confirm_booking' %}" onsubmit="return validatePaymentForm()" class="form-section needs-validation" novalidate>
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="payment_method" class="form-label">Select Payment Method:</label>
+        <select name="payment_method" id="payment_method" class="form-select" onchange="togglePaymentDetails()" required>
+          <option value="">--Select--</option>
+          <option value="Mpesa">Mpesa</option>
+          <option value="Card">Visa / Mastercard</option>
+        </select>
+      </div>
+
+      <div id="mpesa-details" class="mb-3" style="display: none;">
+        <label for="mpesa_number" class="form-label">Mpesa Number:</label>
+        <div class="input-group">
+          <span class="input-group-text">+254</span>
+          <input type="text" class="form-control" name="mpesa_number" id="mpesa_number" placeholder="7XXXXXXXX" maxlength="9">
+        </div>
+        <div class="form-text">Must start with 7 and be 9 digits long (e.g. 712345678)</div>
+      </div>
+
+      <div id="card-details" class="mb-3" style="display: none;">
+        <label for="card_number" class="form-label">Card Number:</label>
+        <input type="text" class="form-control" name="card_number" id="card_number" placeholder="1234 5678 9012 3456" maxlength="16">
+        <div class="form-text">Enter a 16-digit card number</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">🎟 Confirm Booking</button>
+    </form>
+  {% else %}
+    <div class="text-center">
+      <p class="text-muted">Your cart is empty.</p>
+      <a href="/" class="btn btn-outline-primary">Browse Events</a>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Footer -->
+<footer class="footer mt-5">
+  <p class="mb-1">&copy; 2025 EventEase. All rights reserved.</p>
+  <p class="mb-2">Built with ❤️ using Django</p>
+  <div>
+    <a href="https://github.com/" target="_blank"><i class="fab fa-github"></i></a>
+    <a href="https://instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
+    <a href="mailto:support@eventease.com"><i class="fas fa-envelope"></i></a>
+  </div>
+</footer>
+
+<script>
+  function toggleDarkMode() {
+    document.body.classList.toggle("dark-mode");
+  }
+
+  function togglePaymentDetails() {
+    const method = document.getElementById("payment_method").value;
+    document.getElementById("mpesa-details").style.display = "none";
+    document.getElementById("card-details").style.display = "none";
+
+    if (method === "Mpesa") {
+      document.getElementById("mpesa-details").style.display = "block";
+    } else if (method === "Card") {
+      document.getElementById("card-details").style.display = "block";
+    }
+  }
+
+  function validatePaymentForm() {
+    const method = document.getElementById("payment_method").value;
+    if (!method) {
+      alert("Please select a payment method.");
+      return false;
+    }
+
+    if (method === "Mpesa") {
+      const mpesa = document.getElementById("mpesa_number").value.trim();
+      const mpesaPattern = /^[7][0-9]{8}$/;
+      if (!mpesaPattern.test(mpesa)) {
+        alert("Enter a valid Mpesa number (9 digits starting with 7).");
+        return false;
+      }
+    }
+
+    if (method === "Card") {
+      const card = document.getElementById("card_number").value.trim();
+      const cardPattern = /^[0-9]{16}$/;
+      if (!cardPattern.test(card)) {
+        alert("Enter a valid 16-digit card number.");
+        return false;
+      }
+    }
+
+    return true;
+  }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+
+
+<!--{% load cart_extras %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkout</title>
+</head>
+<body>
+    <h1>Checkout</h1>
+
+    {% if events %}
+        <ul>
+          {% for event in events %}
+              <li>
+
+<strong>{{ event.title}}</strong><br>
+                Quantity: {{cart|get_item:event.id}}<br>
+                Price per ticket: {{event.price}}<br>
+              </li>
+          {% endfor %}
+        </ul>
+            <br>
+        <p><strong>Total Amount: ksh {{ total}}</strong></p>
+
+        <form method="post" action="{% url 'confirm_booking' %}">
+          {% csrf_token %}
+          <button type="submit">Confirm Booking</button>
+        </form>
+
+<h3>Total:{{total}}</h3>
+    <form method="post" action="{% url 'confirm_booking' %}" onsubmit="return validatePaymentForm()">
+        {% csrf_token %}
+        <label for="payment_method">Select Payment Method: </label>
+        <select name="payment_method" id="payment_method" required>
+            <option value="">--Select--</option>
+            <option value="Mpesa">Mpesa</option>
+            <option value="Card">Visa/ Mastercard</option>
+        </select><br><br>
+
+       <div id="mpesa-details" style="display:none;">
+           <label for="mpesa_number">Mpesa Number: </label>
+           <input type="text" name="mpesa_number" id="mpesa_number"><br><br>
+       </div>
+       <div id="card-details" style="display:none;">
+           <label for="card_number">Mpesa Number: </label>
+           <input type="text" name="card_number" id="card_number"><br><br>
+       </div>
+
+        <button type="submit">Confirm Booking</button>
+    </form>
+
+<script>
+    function togglePaymentDetails() {
+        var paymentMethod =
+            document.getElementById("payment_method").value;
+            document.getElementById("mpesa-details").style.display = "none";
+        if (paymentMethod === "Mpesa") {
+            document.getElementById("mpesa-details").style.display = "block";
+    }   else if (paymentMethod == "Card") {
+            document.getElementById("card-details").style.display = "block";
+    }
+    }
+    function validatePaymentForm() {
+        var mpesaNumber =
+            document.getElementById("payment_method").value;
+        if (!paymentMethod) {
+            alert("Please select a payment method.");
+            return false;
+    }
+        if (paymentMethod === "Mpesa") {
+            var mpesaNumber =
+                document,getElementById("mpesa_number").value;
+            if (!mpesaNumber) {
+                alert("Please Enter Your Mpesa Number.");
+                return false;
+                }
+            }
+        if (paymentMethod === "Card") {
+            var cardNumber =
+                document.getElementById("card_number").value;
+            if (!cardNumber) {
+                alert("Please Enter Your Card Number.");
+                return false;
+                }
+            }
+    return true;
+}
+</script>
+
+    {% else %}
+        <p>Your cart is empty</p>
+        <a href="/">Browse Events</a>
+    {% endif %}
+
+</body>
+</html>-->
